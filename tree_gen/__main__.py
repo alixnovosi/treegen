@@ -27,7 +27,7 @@ SIZE = HEIGHT // 3
 
 class ImageState:
     """State of image, to aid recursive drawing."""
-    def __init__(self, colors=True, angle_rand=True, branch_rand=True, fork_inc=True):
+    def __init__(self, colors=True, angle_rand=True, branch_rand=True):
         self.x = WIDTH // 2
         self.y = HEIGHT
         self.angle = 0
@@ -48,9 +48,6 @@ class ImageState:
 
         # Randomize branch lengths so they're not all the same size.
         self.branch_rand = branch_rand
-
-        # Fork more at higher depths.
-        self.fork_inc = fork_inc
 
         self.im = Image.new("RGB", (WIDTH, HEIGHT), BG)
 
@@ -113,19 +110,6 @@ def draw(image_state, depth):
     image_state.y = new_y
     image_state.x = new_x
 
-    # More branches per level if we turned on fork_inc.
-    if image_state.fork_inc:
-        if depth > 1:
-            branches = random.choice(range(3, 3 + (depth - 1)))
-        else:
-            branches = 3
-    else:
-        branches = 3
-
-    left_count = branches // 2
-    right_count = branches // 2
-    center_count = branches % 2
-
     # Left.
     print(f"rotating left, doing left branch")
     if image_state.angle_rand:
@@ -139,10 +123,12 @@ def draw(image_state, depth):
 
     image_state.angle += left_ang
 
-    image_state.angle += -left_ang * 2
-    draw(image_state, depth+1)
+    # Branch more near the end.
+    if depth >= DEPTH-4:
+        image_state.angle += -left_ang * 3
+        draw(image_state, depth+1)
 
-    image_state.angle += left_ang * 2
+        image_state.angle += left_ang * 3
 
     print(f"center branch")
     draw(image_state, depth+1)
@@ -160,10 +146,12 @@ def draw(image_state, depth):
 
     image_state.angle += -right_ang
 
-    image_state.angle += right_ang * 2
-    draw(image_state, depth+1)
+    # Branch more near the end.
+    if depth >= DEPTH-4:
+        image_state.angle += right_ang * 3
+        draw(image_state, depth+1)
 
-    image_state.angle += -right_ang * 2
+        image_state.angle += -right_ang * 3
 
     # Reset before finishing this recursive step.
     image_state.y = old_y
