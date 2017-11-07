@@ -172,12 +172,13 @@ def draw_rec(tree_info, depth):
 
     # Handle line joins being bad by shifting over based on width.
     if width > 1:
-        shift = math.cos(left_ang) * ((width - width // 2) // 4)
+        h_shift = math.cos(left_ang) * ((width - width // 2) // 3)
+        v_shift = width // 2
 
-        tree_info.x += shift
+        tree_info.x += h_shift
 
         # Also shift height.
-        tree_info.y += width // 4
+        tree_info.y += v_shift
 
     #LOG.debug(f"left ang {left_ang}")
     tree_info.angle += -left_ang
@@ -186,8 +187,8 @@ def draw_rec(tree_info, depth):
     tree_info.angle += left_ang
 
     if width > 1:
-        tree_info.x -= shift
-        tree_info.y -= width // 4
+        tree_info.x -= h_shift
+        tree_info.y -= v_shift
 
     # Branch more near the end.
     if tree_info.extra_branching:
@@ -209,12 +210,13 @@ def draw_rec(tree_info, depth):
 
     # Handle line joins being bad by shifting over based on width.
     if width > 1:
-        shift = math.cos(right_ang) * ((width - width // 2) // 4)
+        h_shift = math.cos(right_ang) * ((width - width // 2) // 3)
+        v_shift = width // 2
 
-        tree_info.x -= shift
+        tree_info.x -= h_shift
 
         # Also shift height.
-        tree_info.y += width // 4
+        tree_info.y += v_shift
 
     #LOG.debug(f"right ang {right_ang}")
     tree_info.angle += right_ang
@@ -223,8 +225,8 @@ def draw_rec(tree_info, depth):
     tree_info.angle += -right_ang
 
     if width > 1:
-        tree_info.x += shift
-        tree_info.y -= width // 4
+        tree_info.x += h_shift
+        tree_info.y -= v_shift
 
     # Branch more near the end.
     if tree_info.extra_branching:
