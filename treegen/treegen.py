@@ -55,13 +55,14 @@ class Seasons(enum.Enum):
 class TreeInfo:
     """Info on tree, to aid recursive drawing."""
     def __init__(self, colors=True, angle_rand=True, branch_rand=True, extra_branching=True,
-                 season=None, mixed_fall=False, IMAGE_PATH="test.png"):
+                 season=None, mixed_fall=False, image_path="test.png"):
         self.x = WIDTH // 2
         self.y = HEIGHT
         self.angle = 0
 
-        if not path.isfile(IMAGE_PATH):
-            with open(IMAGE_PATH, "a") as f:
+        self.image_path = image_path
+        if not path.isfile(image_path):
+            with open(image_path, "a") as f:
                 f.close()
 
         # Use colors or just use black and white.
@@ -99,19 +100,19 @@ def draw(tree_info):
     """Draw a tree with the magic of recursion."""
     draw_rec(tree_info, 0)
 
-    tree_info.im.save(IMAGE_PATH)
+    tree_info.im.save(tree_info.image_path)
 
 def draw_rec(tree_info, depth):
     """Recursively draw a tree."""
-    LOG.debug(f"depth={depth}")
+    #LOG.debug(f"depth={depth}")
     if depth == DEPTH:
-        LOG.debug(f"depth equal to {DEPTH}, returning")
+        #LOG.debug(f"depth equal to {DEPTH}, returning")
         return
 
     # Draw leaves at the end.
     if tree_info.colors:
         if depth == DEPTH-1:
-            LOG.debug(f"leaves")
+            #LOG.debug(f"leaves")
 
             if tree_info.season == Seasons.SUMMER:
                 fill = LEAF_GREEN
@@ -126,7 +127,7 @@ def draw_rec(tree_info, depth):
                 fill = LEAF_GREEN
 
         else:
-            LOG.debug(f"branches")
+            #LOG.debug(f"branches")
             fill = TREE_BROWN
     else:
         fill = BLACK
@@ -141,8 +142,8 @@ def draw_rec(tree_info, depth):
     width = BASE_WIDTH // (2 ** depth)
 
     # Start with trunk, or what we think is the trunk.
-    LOG.debug(f"size={size}")
-    LOG.debug(f"drawing 'trunk'")
+    #LOG.debug(f"size={size}")
+    #LOG.debug(f"drawing 'trunk'")
 
     old_x = tree_info.x
     old_y = tree_info.y
@@ -158,13 +159,13 @@ def draw_rec(tree_info, depth):
     tree_info.x = new_x
 
     # Left.
-    LOG.debug(f"rotating left, doing left branch")
+    #LOG.debug(f"rotating left, doing left branch")
     if tree_info.angle_rand:
         left_ang = math.radians(BASE_ANG + random.choice(range(-20, 21, 1)))
     else:
         left_ang = math.radians(BASE_ANG)
 
-    LOG.debug(f"left ang {left_ang}")
+    #LOG.debug(f"left ang {left_ang}")
     tree_info.angle += -left_ang
     draw_rec(tree_info, depth+1)
 
@@ -178,17 +179,17 @@ def draw_rec(tree_info, depth):
 
             tree_info.angle += left_ang * 3
 
-    LOG.debug(f"center branch")
+    #LOG.debug(f"center branch")
     draw_rec(tree_info, depth+1)
 
     # Right
-    LOG.debug(f"rotating right, doing right branch")
+    #LOG.debug(f"rotating right, doing right branch")
     if tree_info.angle_rand:
         right_ang = math.radians(BASE_ANG + random.choice(range(-20, 21, 1)))
     else:
         right_ang = math.radians(BASE_ANG)
 
-    LOG.debug(f"right ang {right_ang}")
+    #LOG.debug(f"right ang {right_ang}")
     tree_info.angle += right_ang
     draw_rec(tree_info, depth+1)
 
@@ -206,4 +207,4 @@ def draw_rec(tree_info, depth):
     tree_info.y = old_y
     tree_info.x = old_x
 
-    LOG.debug("done here")
+    #LOG.debug("done here")
