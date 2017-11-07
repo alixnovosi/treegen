@@ -1,5 +1,6 @@
 """Draw trees."""
 
+import enum
 import math
 import logging
 import random
@@ -16,9 +17,24 @@ IMAGE_PATH = path.join(HERE, f"test-{now}.png")
 
 WIDTH = 1600
 HEIGHT = 900
-BLUE = (157, 175, 247, 254)
-GREEN = (52, 186, 106, 254)
-BROWN = (98, 90, 21, 254)
+
+# Colors.
+SKY_BLUE = (157, 175, 247, 254)
+SKY_WHITE = (255, 255, 255, 254)
+
+# Leaf colors.
+LEAF_GREEN = (52, 186, 106, 254)
+
+LEAF_YELLOW = (244, 244, 122, 254)
+LEAF_RED = (204, 69, 38, 254)
+LEAF_BROWN = (181, 108, 36, 254)
+
+LEAF_WHITE = (255, 255, 255, 254)
+
+FALL_LEAVES = [LEAF_YELLOW, LEAF_RED, LEAF_BROWN]
+
+TREE_BROWN = (98, 90, 21, 254)
+
 BLACK = (0, 0, 0, 254)
 WHITE = (255, 255, 255, 254)
 
@@ -29,10 +45,17 @@ SIZE = HEIGHT // 3
 
 LOG = logging.getLogger("root")
 
+class Seasons(enum.Enum):
+    """Seasons we support."""
+    WINTER = 0
+    FALL = 100
+    SUMMER = 200
+
 
 class TreeInfo:
     """Info on tree, to aid recursive drawing."""
-    def __init__(self, colors=True, angle_rand=True, branch_rand=True, extra_branching=True):
+    def __init__(self, colors=True, angle_rand=True, branch_rand=True, extra_branching=True,
+                 season=None, mixed_fall=False):
         self.x = WIDTH // 2
         self.y = HEIGHT
         self.angle = 0
@@ -44,9 +67,9 @@ class TreeInfo:
         # Use colors or just use black and white.
         self.colors = colors
         if colors:
-            BG = BLUE
+            BG = SKY_BLUE
         else:
-            BG=(255, 255, 255)
+            BG = SKY_WHITE
 
         # Randomize angles left and right, so they're not just BASE_ANGLE.
         self.angle_rand = angle_rand
@@ -57,8 +80,19 @@ class TreeInfo:
         # Have some more branching near the end.
         self.extra_branching = extra_branching
 
-        self.im = Image.new("RGBA", (WIDTH, HEIGHT), BG)
+        # Pick a season at random if none was chosen.
+        if season is None:
+            self.season = random.choice(list(Seasons))
+        else:
+            self.season = season
 
+        # Mix up colors in fall trees.
+        self.mixed_fall = mixed_fall
+        if not mixed_fall:
+            self.fall_color = random.choice(FALL_LEAVES)
+
+        # Create image and draw object.
+        self.im = Image.new("RGBA", (WIDTH, HEIGHT), BG)
         self.draw = ImageDraw.Draw(self.im)
 
 def draw(tree_info):
@@ -78,10 +112,22 @@ def draw_rec(tree_info, depth):
     if tree_info.colors:
         if depth == DEPTH-1:
             LOG.debug(f"leaves")
-            fill = GREEN
+
+            if tree_info.season == Seasons.SUMMER:
+                fill = LEAF_GREEN
+            elif tree_info.season == Seasons.FALL:
+                if not tree_info.mixed_fall:
+                    fill = tree_info.fall_color
+                else:
+                    fill = random.choice(FALL_LEAVES)
+            elif tree_info.season == Seasons.WINTER:
+                fill = LEAF_WHITE
+            else:
+                fill = LEAF_GREEN
+
         else:
             LOG.debug(f"branches")
-            fill = BROWN
+            fill = TREE_BROWN
     else:
         fill = BLACK
 
