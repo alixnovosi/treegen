@@ -1,1 +1,1 @@
-from treegen import *
+from treegen.treegen import *
