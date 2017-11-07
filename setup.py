@@ -1,4 +1,4 @@
-"""Setup for tree_bot"""
+"""Setup for treebot"""
 
 from os import path
 from setuptools import setup, find_packages
@@ -10,15 +10,15 @@ with open(path.join(HERE, "VERSION"), encoding="utf-8") as f:
 
 setup(author="Andrew Michaud",
       author_email="dev@mail.andrewmichaud.com",
-      url="https://github.com/andrewmichaud/tree_gen",
+      url="https://github.com/andrewmichaud/treegen",
 
-      entry_points={"console_scripts": ["tree__gen = tree_gen.__main__:main"]},
+      entry_points={"console_scripts": ["treegen = treegen.__main__:main"]},
 
       install_requires=["botskeleton>=1.1.0", "Pillow"],
 
       license="BSD3",
 
-      name="tree_gen",
+      name="treegen",
 
       packages=find_packages(),
 

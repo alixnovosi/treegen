@@ -6,6 +6,7 @@ import logging
 import random
 from datetime import datetime
 from os import path
+
 from PIL import Image, ImageDraw
 
 DEPTH = 10
@@ -13,7 +14,6 @@ DEPTH = 10
 HERE = path.abspath(path.dirname(__file__))
 
 now = datetime.now()
-IMAGE_PATH = path.join(HERE, f"test-{now}.png")
 
 WIDTH = 1600
 HEIGHT = 900
@@ -55,7 +55,7 @@ class Seasons(enum.Enum):
 class TreeInfo:
     """Info on tree, to aid recursive drawing."""
     def __init__(self, colors=True, angle_rand=True, branch_rand=True, extra_branching=True,
-                 season=None, mixed_fall=False):
+                 season=None, mixed_fall=False, IMAGE_PATH="test.png"):
         self.x = WIDTH // 2
         self.y = HEIGHT
         self.angle = 0
