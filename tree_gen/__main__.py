@@ -14,9 +14,13 @@ IMAGE_PATH = path.join(HERE, f"test-{now}.png")
 WIDTH = 1600
 HEIGHT = 900
 BLUE = (157, 175, 247)
+GREEN = (52, 186, 106)
+BROWN = (98, 90, 21)
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
 
 BASE_ANG = 30
-BASE_WIDTH = 10
+BASE_WIDTH = 20
 
 SIZE = HEIGHT // 3
 
@@ -44,6 +48,9 @@ class ImageState:
 
         # Randomize branch lengths so they're not all the same size.
         self.branch_rand = branch_rand
+
+        # Fork more at higher depths.
+        self.fork_inc = fork_inc
 
         self.im = Image.new("RGB", (WIDTH, HEIGHT), BG)
 
@@ -73,32 +80,53 @@ def draw(image_state, depth):
     if image_state.colors:
         if depth == DEPTH-1:
             print(f"leaves")
-            fill = (52, 186, 106)
+            fill = GREEN
         else:
             print(f"branches")
-            fill = (98, 90, 21)
+            fill = BROWN
     else:
-        fill = (0, 0, 0)
+        fill = BLACK
 
+    # Stretch or shrink branches to add randomness.
     if image_state.branch_rand:
         size = (SIZE * ((2/3) ** depth)) * (random.choice(range(4, 11)) / 10)
     else:
         size = SIZE * ((2/3) ** depth)
 
+    # Shrink branches as we go on.
     width = BASE_WIDTH // (2 ** depth)
+
+    # Start with trunk, or what we think is the trunk.
     print(f"size={size}")
     print(f"drawing 'trunk'")
 
     old_x = image_state.x
     old_y = image_state.y
 
+    # Actual trunk drawing.
     new_x = image_state.x - (size * math.sin(image_state.angle))
     new_y = image_state.y - (size * math.cos(image_state.angle))
     image_state.draw.line([(image_state.x, image_state.y), (new_x, new_y)],
                           fill=fill, width=width)
+
+    # Move x and y for recursion.
     image_state.y = new_y
     image_state.x = new_x
 
+    # More branches per level if we turned on fork_inc.
+    if image_state.fork_inc:
+        if depth > 1:
+            branches = random.choice(range(3, 3 + (depth - 1)))
+        else:
+            branches = 3
+    else:
+        branches = 3
+
+    left_count = branches // 2
+    right_count = branches // 2
+    center_count = branches % 2
+
+    # Left.
     print(f"rotating left, doing left branch")
     if image_state.angle_rand:
         left_ang = math.radians(BASE_ANG + random.choice(range(-20, 21, 1)))
@@ -111,9 +139,15 @@ def draw(image_state, depth):
 
     image_state.angle += left_ang
 
+    image_state.angle += -left_ang * 2
+    draw(image_state, depth+1)
+
+    image_state.angle += left_ang * 2
+
     print(f"center branch")
     draw(image_state, depth+1)
 
+    # Right
     print(f"rotating right, doing right branch")
     if image_state.angle_rand:
         right_ang = math.radians(BASE_ANG + random.choice(range(-20, 21, 1)))
@@ -124,11 +158,16 @@ def draw(image_state, depth):
     image_state.angle += right_ang
     draw(image_state, depth+1)
 
-    # reset coords
+    image_state.angle += -right_ang
+
+    image_state.angle += right_ang * 2
+    draw(image_state, depth+1)
+
+    image_state.angle += -right_ang * 2
+
+    # Reset before finishing this recursive step.
     image_state.y = old_y
     image_state.x = old_x
-
-    image_state.angle += -right_ang
 
     print("done here")
 
