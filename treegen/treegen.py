@@ -55,7 +55,7 @@ class Seasons(enum.Enum):
 class TreeInfo:
     """Info on tree, to aid recursive drawing."""
     def __init__(self, colors=True, angle_rand=True, branch_rand=True, extra_branching=True,
-                 season=None, mixed_fall=False, image_path="test.png"):
+                 season=None, mixed_fall=False, inverted=False, image_path="test.png"):
         self.x = WIDTH // 2
         self.y = HEIGHT
         self.angle = 0
@@ -67,8 +67,11 @@ class TreeInfo:
 
         # Use colors or just use black and white.
         self.colors = colors
+        self.inverted = inverted
         if colors:
             BG = SKY_BLUE
+        elif self.inverted:
+            BG = BLACK
         else:
             BG = SKY_WHITE
 
@@ -129,8 +132,10 @@ def draw_rec(tree_info, depth):
         else:
             #LOG.debug(f"branches")
             fill = TREE_BROWN
-    else:
+    elif not tree_info.inverted:
         fill = BLACK
+    else:
+        fill = WHITE
 
     # Stretch or shrink branches to add randomness.
     if tree_info.branch_rand:
