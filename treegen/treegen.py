@@ -13,8 +13,6 @@ DEPTH = 10
 
 HERE = path.abspath(path.dirname(__file__))
 
-now = datetime.now()
-
 WIDTH = 1600
 HEIGHT = 900
 
@@ -33,6 +31,7 @@ LEAF_WHITE = (255, 255, 255, 254)
 
 FALL_LEAVES = [LEAF_YELLOW, LEAF_RED, LEAF_BROWN]
 
+# Other colors.
 TREE_BROWN = (98, 90, 21, 254)
 
 BLACK = (0, 0, 0, 254)
@@ -64,6 +63,7 @@ class TreeInfo:
         self.x = WIDTH // 2
         self.y = HEIGHT
         self.angle = 0
+        self.depth = 0
 
         self.image_path = image_path
         if not path.isfile(image_path):
@@ -101,148 +101,149 @@ class TreeInfo:
             self.fall_color = random.choice(FALL_LEAVES)
 
         # Create image and draw object.
-        self.im = Image.new("RGBA", (WIDTH, HEIGHT), BG)
-        self.draw = ImageDraw.Draw(self.im)
+        self.image = Image.new("RGBA", (WIDTH, HEIGHT), BG)
+        self.imagedraw = ImageDraw.Draw(self.image)
 
-def draw(tree_info):
-    """Draw a tree with the magic of recursion."""
-    draw_rec(tree_info, 0)
+    def draw(self):
+        """Draw a tree with the magic of recursion."""
+        self.draw_rec()
 
-    tree_info.im.save(tree_info.image_path)
+        self.image.save(self.image_path)
 
-def draw_rec(tree_info, depth):
-    """Recursively draw a tree."""
-    #LOG.debug(f"depth={depth}")
-    if depth == DEPTH:
-        #LOG.debug(f"depth equal to {DEPTH}, returning")
-        return
+    def pick_color(self):
+        """Pick color for current tree bit based on tree_info, depth."""
+        if self.colors:
+            if self.depth == DEPTH-1:
+                #LOG.debug(f"leaves")
 
-    # Draw leaves at the end.
-    if tree_info.colors:
-        if depth == DEPTH-1:
-            #LOG.debug(f"leaves")
-
-            if tree_info.season == Seasons.SUMMER:
-                fill = LEAF_GREEN
-            elif tree_info.season == Seasons.FALL:
-                if not tree_info.mixed_fall:
-                    fill = tree_info.fall_color
+                if self.season == Seasons.SUMMER:
+                    return LEAF_GREEN
+                elif self.season == Seasons.FALL:
+                    if not self.mixed_fall:
+                        return self.fall_color
+                    else:
+                        return random.choice(FALL_LEAVES)
+                elif self.season == Seasons.WINTER:
+                    return LEAF_WHITE
                 else:
-                    fill = random.choice(FALL_LEAVES)
-            elif tree_info.season == Seasons.WINTER:
-                fill = LEAF_WHITE
+                    return LEAF_GREEN
+
             else:
-                fill = LEAF_GREEN
-
+                #LOG.debug(f"branches")
+                return TREE_BROWN
+        elif not self.inverted:
+            return BLACK
         else:
-            #LOG.debug(f"branches")
-            fill = TREE_BROWN
-    elif not tree_info.inverted:
-        fill = BLACK
-    else:
-        fill = WHITE
+            return WHITE
 
-    # Stretch or shrink branches to add randomness.
-    if tree_info.branch_rand:
-        size = (SIZE * ((2/3) ** depth)) * (random.choice(BRANCH_LEN_MODIFIERS) / 10)
-    else:
-        size = SIZE * ((2/3) ** depth)
+    def pick_branch_size(self):
+        """Pick new branch length based on depth."""
+        if self.branch_rand:
+            return (SIZE * ((2/3) ** self.depth)) * (random.choice(BRANCH_LEN_MODIFIERS) / 10)
 
-    # Shrink branches as we go on.
-    width = int((BASE_WIDTH * (0.69 ** depth)) // 1)
+        return SIZE * ((2/3) ** self.depth)
 
-    # Start with trunk, or what we think is the trunk.
-    #LOG.debug(f"size={size}")
-    #LOG.debug(f"drawing 'trunk'")
+    def pick_branch_width(self):
+        """Pick new branch width based on depth."""
+        return int((BASE_WIDTH * (0.69 ** self.depth)) // 1)
 
-    old_x = tree_info.x
-    old_y = tree_info.y
+    def get_new_coords(self, size):
+        """Get new x, y based on branch we want to draw."""
+        new_x = self.x - (size * math.sin(self.angle))
+        new_y = self.y - (size * math.cos(self.angle))
+        return (new_x, new_y)
 
-    # Actual trunk drawing.
-    new_x = tree_info.x - (size * math.sin(tree_info.angle))
-    new_y = tree_info.y - (size * math.cos(tree_info.angle))
-    tree_info.draw.line([(tree_info.x, tree_info.y), (new_x, new_y)],
-                          fill=fill, width=width)
+    def get_ang(self):
+        """Get random angle, for left or right side."""
+        if self.angle_rand:
+            return math.radians(BASE_ANG + random.choice(ANGLE_MODIFIERS))
 
-    # Move x and y for recursion.
-    tree_info.y = new_y
-    tree_info.x = new_x
+        return math.radians(BASE_ANG)
 
-    # Left.
-    #LOG.debug(f"rotating left, doing left branch")
-    if tree_info.angle_rand:
-        left_ang = math.radians(BASE_ANG + random.choice(ANGLE_MODIFIERS))
-    else:
-        left_ang = math.radians(BASE_ANG)
+    def get_shifts(self, ang, width):
+        """Get shifts vertically and horizontally that we need to make line joins work (ish)."""
+        h_shift = math.cos(ang) * ((width - width // 2) // 2)
+        v_shift = math.sin(ang) * ((width - width // 2) // 2)
+        return (h_shift, v_shift)
 
-    # Handle line joins being bad by shifting over based on width.
-    if width > 1:
-        h_shift = math.cos(left_ang) * ((width - width // 2) // 3)
-        v_shift = width // 2
+    def draw_rec(self):
+        """Recursively draw a tree."""
 
-        tree_info.x += h_shift
+        # Increase depth.
+        self.depth += 1
 
-        # Also shift height.
-        tree_info.y += v_shift
+        # Stop, eventually.
+        if self.depth == DEPTH:
+            self.depth -= 1
+            return
 
-    #LOG.debug(f"left ang {left_ang}")
-    tree_info.angle += -left_ang
-    draw_rec(tree_info, depth+1)
+        # Calculate colors and branch dimensions.
+        fill = self.pick_color()
+        size = self.pick_branch_size()
+        width = self.pick_branch_width()
 
-    tree_info.angle += left_ang
+        old_x = self.x
+        old_y = self.y
 
-    if width > 1:
-        tree_info.x -= h_shift
-        tree_info.y -= v_shift
+        (new_x, new_y) = self.get_new_coords(size)
 
-    # Branch more near the end.
-    if tree_info.extra_branching:
-        if depth >= random.choice(range(4, DEPTH)):
-            tree_info.angle += -left_ang * 3
-            draw_rec(tree_info, depth+1)
+        # Draw root of this tree section.
+        self.imagedraw.line([(self.x, self.y), (new_x, new_y)], fill=fill, width=width)
 
-            tree_info.angle += left_ang * 3
+        # Move x and y so recursion starts drawing at the correct place.
+        self.y = new_y
+        self.x = new_x
 
-    #LOG.debug(f"center branch")
-    draw_rec(tree_info, depth+1)
+        ### LEFT SIDE ####
+        left_ang = self.get_ang()
+        self.angle += -left_ang
 
-    # Right
-    #LOG.debug(f"rotating right, doing right branch")
-    if tree_info.angle_rand:
-        right_ang = math.radians(BASE_ANG + random.choice(ANGLE_MODIFIERS))
-    else:
-        right_ang = math.radians(BASE_ANG)
+        # Handle line joins being bad by shifting over based on width and angle.
+        (h_shift, v_shift) = self.get_shifts(left_ang, width)
+        self.x += h_shift
+        self.y += v_shift
 
-    # Handle line joins being bad by shifting over based on width.
-    if width > 1:
-        h_shift = math.cos(right_ang) * ((width - width // 2) // 3)
-        v_shift = width // 2
+        self.draw_rec()
 
-        tree_info.x -= h_shift
+        # Restore angle we started with and x, y we started with.
+        self.angle += left_ang
+        self.x -= h_shift
+        self.y -= v_shift
 
-        # Also shift height.
-        tree_info.y += v_shift
+        # Branch more near the end.
+        if self.extra_branching:
+            if self.depth >= random.choice(range(4, DEPTH)):
+                self.angle += -left_ang * 3
+                self.draw_rec()
+                self.angle += left_ang * 3
 
-    #LOG.debug(f"right ang {right_ang}")
-    tree_info.angle += right_ang
-    draw_rec(tree_info, depth+1)
+        ### MIDDLE ####
+        self.draw_rec()
 
-    tree_info.angle += -right_ang
+        ### RIGHT SIDE ###
+        right_ang = self.get_ang()
+        self.angle += right_ang
 
-    if width > 1:
-        tree_info.x += h_shift
-        tree_info.y -= v_shift
+        # Handle line joins being bad by shifting over based on width and angle.
+        (h_shift, v_shift) = self.get_shifts(right_ang, width)
+        self.x -= h_shift
+        self.y += v_shift
 
-    # Branch more near the end.
-    if tree_info.extra_branching:
-        if depth >= random.choice(range(4, DEPTH)):
-            tree_info.angle += right_ang * 3
-            draw_rec(tree_info, depth+1)
+        self.draw_rec()
 
-            tree_info.angle += -right_ang * 3
+        # Restore angle we started with and x, y we started with.
+        self.angle += -right_ang
+        self.x += h_shift
+        self.y -= v_shift
 
-    # Reset before finishing this recursive step.
-    tree_info.y = old_y
-    tree_info.x = old_x
+        # Branch more near the end.
+        if self.extra_branching:
+            if self.depth >= random.choice(range(4, DEPTH)):
+                self.angle += right_ang * 3
+                self.draw_rec()
+                self.angle += -right_ang * 3
 
-    #LOG.debug("done here")
+        # Reset x, y, and depth before finishing this recursive step.
+        self.y = old_y
+        self.x = old_x
+        self.depth -= 1

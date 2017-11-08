@@ -14,7 +14,7 @@ setup(author="Andrew Michaud",
 
       entry_points={"console_scripts": ["treegen = treegen.__main__:main"]},
 
-      install_requires=["botskeleton>=1.1.0", "Pillow"],
+      install_requires=["Pillow"],
 
       license="BSD3",
 
