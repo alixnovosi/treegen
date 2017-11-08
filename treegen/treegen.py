@@ -38,10 +38,15 @@ TREE_BROWN = (98, 90, 21, 254)
 BLACK = (0, 0, 0, 254)
 WHITE = (255, 255, 255, 254)
 
+# Tree factors.
 BASE_ANG = 30
 BASE_WIDTH = 20
 
 SIZE = HEIGHT // 3
+
+# Randomization factors.
+ANGLE_MODIFIERS = range(-30, 31, 1)
+BRANCH_LEN_MODIFIERS = range(4, 11)
 
 LOG = logging.getLogger("root")
 
@@ -139,12 +144,12 @@ def draw_rec(tree_info, depth):
 
     # Stretch or shrink branches to add randomness.
     if tree_info.branch_rand:
-        size = (SIZE * ((2/3) ** depth)) * (random.choice(range(4, 11)) / 10)
+        size = (SIZE * ((2/3) ** depth)) * (random.choice(BRANCH_LEN_MODIFIERS) / 10)
     else:
         size = SIZE * ((2/3) ** depth)
 
     # Shrink branches as we go on.
-    width = BASE_WIDTH // (2 ** depth)
+    width = int((BASE_WIDTH * (0.69 ** depth)) // 1)
 
     # Start with trunk, or what we think is the trunk.
     #LOG.debug(f"size={size}")
@@ -166,7 +171,7 @@ def draw_rec(tree_info, depth):
     # Left.
     #LOG.debug(f"rotating left, doing left branch")
     if tree_info.angle_rand:
-        left_ang = math.radians(BASE_ANG + random.choice(range(-20, 21, 1)))
+        left_ang = math.radians(BASE_ANG + random.choice(ANGLE_MODIFIERS))
     else:
         left_ang = math.radians(BASE_ANG)
 
@@ -204,7 +209,7 @@ def draw_rec(tree_info, depth):
     # Right
     #LOG.debug(f"rotating right, doing right branch")
     if tree_info.angle_rand:
-        right_ang = math.radians(BASE_ANG + random.choice(range(-20, 21, 1)))
+        right_ang = math.radians(BASE_ANG + random.choice(ANGLE_MODIFIERS))
     else:
         right_ang = math.radians(BASE_ANG)
 
