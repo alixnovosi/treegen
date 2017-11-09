@@ -23,9 +23,11 @@ SKY_WHITE = (255, 255, 255, 254)
 # Leaf colors.
 LEAF_GREEN = (52, 186, 106, 254)
 
-LEAF_YELLOW = (244, 244, 122, 254)
+LEAF_YELLOW = (207, 162, 65)
 LEAF_RED = (204, 69, 38, 254)
 LEAF_BROWN = (181, 108, 36, 254)
+
+LEAF_PINK = (255, 183, 197, 254)
 
 LEAF_WHITE = (255, 255, 255, 254)
 
@@ -54,6 +56,7 @@ class Seasons(enum.Enum):
     WINTER = 0
     FALL = 100
     SUMMER = 200
+    SPRING = 300
 
 
 class TreeInfo:
@@ -86,14 +89,14 @@ class TreeInfo:
         # Randomize branch lengths so they're not all the same size.
         self.branch_rand = branch_rand
 
-        # Have some more branching near the end.
-        self.extra_branching = extra_branching
-
         # Pick a season at random if none was chosen.
         if season is None:
             self.season = random.choice(list(Seasons))
         else:
             self.season = season
+
+        # Have some more branching near the end. Force disable for winter.
+        self.extra_branching = extra_branching and not self.season is Seasons.WINTER
 
         # Mix up colors in fall trees.
         self.mixed_fall = mixed_fall
@@ -114,7 +117,6 @@ class TreeInfo:
         """Pick color for current tree bit based on tree_info, depth."""
         if self.colors:
             if self.depth == DEPTH-1:
-                #LOG.debug(f"leaves")
 
                 if self.season == Seasons.SUMMER:
                     return LEAF_GREEN
@@ -123,14 +125,16 @@ class TreeInfo:
                         return self.fall_color
                     else:
                         return random.choice(FALL_LEAVES)
+                elif self.season == Seasons.SPRING:
+                    return LEAF_PINK
                 elif self.season == Seasons.WINTER:
-                    return LEAF_WHITE
+                    return TREE_BROWN
                 else:
                     return LEAF_GREEN
 
             else:
-                #LOG.debug(f"branches")
                 return TREE_BROWN
+
         elif not self.inverted:
             return BLACK
         else:
