@@ -10,7 +10,7 @@ with open(path.join(HERE, "VERSION"), encoding="utf-8") as f:
 
 setup(author="Andrew Michaud",
       author_email="dev@mail.andrewmichaud.com",
-      url="https://github.com/andrewmichaud/treegen",
+      url="https://github.com/alixnovosi/treegen",
 
       entry_points={"console_scripts": ["treegen = treegen.__main__:main"]},
 
