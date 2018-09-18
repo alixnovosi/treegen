@@ -9,7 +9,7 @@ from os import path
 
 from PIL import Image, ImageDraw
 
-from constants import *
+from .constants import *
 
 LOG = logging.getLogger("root")
 
